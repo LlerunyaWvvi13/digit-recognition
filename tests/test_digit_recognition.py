@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 import cv2
@@ -5,6 +6,7 @@ import numpy as np
 import pytest
 import torch
 
+from digit_recognition.evaluate_numbers import positive_int
 from digit_recognition.model import DigitCNN
 from digit_recognition.predict import DigitRecognizer
 from digit_recognition.preprocess import binarize, extract_digits, normalize_glyph
@@ -37,6 +39,20 @@ def test_extract_digits_splits_line_left_to_right(inverted: bool) -> None:
     assert len(glyphs) == 4
     assert [box.x for box in boxes] == sorted(box.x for box in boxes)
     assert all(glyph.shape == (28, 28) for glyph in glyphs)
+
+
+def test_transparent_png_uses_alpha_channel() -> None:
+    # Черная цифра на прозрачном фоне: цвет у всех пикселей один, отличается только альфа.
+    alpha = 255 - draw_number("47")
+    image = np.dstack([np.zeros_like(alpha)] * 3 + [alpha])
+    glyphs, _ = extract_digits(image)
+    assert len(glyphs) == 2
+
+
+def test_evaluation_rejects_empty_sizes() -> None:
+    with pytest.raises(argparse.ArgumentTypeError):
+        positive_int("0")
+    assert positive_int("4") == 4
 
 
 def test_small_noise_is_ignored() -> None:
