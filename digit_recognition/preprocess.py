@@ -46,7 +46,10 @@ class Box:
 
 def _flatten_transparency(image: np.ndarray) -> np.ndarray:
     """Накладывает BGRA на белый фон: цвет прозрачных пикселей ничего не значит."""
-    depth = float(np.iinfo(image.dtype).max) if image.dtype.kind in "iu" else 1.0
+    if image.dtype.kind in "iu":
+        depth = float(np.iinfo(image.dtype).max)
+    else:
+        depth = 255.0 if float(image.max()) > 1 else 1.0
     alpha = image[:, :, 3:4].astype(np.float32) / depth
     color = image[:, :, :3].astype(np.float32) / depth
     flattened = color * alpha + (1 - alpha)
