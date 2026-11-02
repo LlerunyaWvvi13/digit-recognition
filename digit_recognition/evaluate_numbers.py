@@ -11,6 +11,13 @@ from torchvision import datasets
 from .predict import DigitRecognizer
 
 
+def positive_int(text: str) -> int:
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError("значение должно быть не меньше 1")
+    return value
+
+
 def compose_number(digits: list[np.ndarray], rng: np.random.Generator) -> np.ndarray:
     """Склеивает цифры в строку со случайным зазором, не допуская касаний."""
     gap_range = (4, 12)
@@ -29,8 +36,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--checkpoint", default="checkpoints/digit_cnn.pt")
-    parser.add_argument("--samples", type=int, default=2000)
-    parser.add_argument("--length", type=int, default=4)
+    parser.add_argument("--samples", type=positive_int, default=2000)
+    parser.add_argument("--length", type=positive_int, default=4)
     parser.add_argument("--seed", type=int, default=7)
     args = parser.parse_args()
 

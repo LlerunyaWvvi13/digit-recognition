@@ -44,6 +44,15 @@ class Box:
         )
 
 
+def _flatten_transparency(image: np.ndarray) -> np.ndarray:
+    """Накладывает BGRA на белый фон: цвет прозрачных пикселей ничего не значит."""
+    depth = float(np.iinfo(image.dtype).max) if image.dtype.kind in "iu" else 1.0
+    alpha = image[:, :, 3:4].astype(np.float32) / depth
+    color = image[:, :, :3].astype(np.float32) / depth
+    flattened = color * alpha + (1 - alpha)
+    return cv2.cvtColor((flattened * 255).astype(np.uint8), cv2.COLOR_BGR2GRAY)
+
+
 def to_grayscale(image: np.ndarray) -> np.ndarray:
     """Переводит BGR/BGRA/серое изображение в uint8 с одним каналом."""
     if image is None or image.size == 0:
@@ -53,7 +62,7 @@ def to_grayscale(image: np.ndarray) -> np.ndarray:
     elif image.ndim == 3 and image.shape[2] == 3:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     elif image.ndim == 3 and image.shape[2] == 4:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+        gray = _flatten_transparency(image)
     else:
         raise ValueError(f"Неподдерживаемая форма изображения: {image.shape}")
     if gray.dtype != np.uint8:
