@@ -49,6 +49,14 @@ def test_transparent_png_uses_alpha_channel() -> None:
     assert len(glyphs) == 2
 
 
+@pytest.mark.parametrize("scale", [1.0, 1 / 255])
+def test_transparent_float_image_uses_alpha_channel(scale: float) -> None:
+    alpha = (255 - draw_number("47")).astype(np.float32) * scale
+    image = np.dstack([np.zeros_like(alpha)] * 3 + [alpha])
+    glyphs, _ = extract_digits(image)
+    assert len(glyphs) == 2
+
+
 def test_evaluation_rejects_empty_sizes() -> None:
     with pytest.raises(argparse.ArgumentTypeError):
         positive_int("0")
